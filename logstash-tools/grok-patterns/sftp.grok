@@ -1,0 +1,1 @@
+SFTP_LOG %{SYSLOGTIMESTAMP:date} %{HOSTNAME:hostname} %{PROG:process_name}(?:\[%{POSINT:process_pid:int}\]): (session %{WORD:sftp_session_status} for local user %{HOSTNAME:remote_user} from \[%{IP:remote_ip}\]|%{GREEDYDATA:commande})

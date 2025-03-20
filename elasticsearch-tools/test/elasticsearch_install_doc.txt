@@ -1,0 +1,100 @@
+https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-elasticsearch-on-rocky-linux-8
+https://itnixpro.com/install-elk-stack-8-on-rocky-linux/
+
+
+export ELK_PATH="${HOME}/TOOLS/ELK_STACK"
+mkdir -p ${ELK_PATH}/pkgs && cd ${ELK_PATH}/pkgs
+
+### PKG Install
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.11.1-x86_64.rpm -P ${ELK_PATH}/pkgs
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.11.1-x86_64.rpm.sha512 -P ${ELK_PATH}/pkgs
+shasum -a 512 -c elasticsearch-8.11.1-x86_64.rpm.sha512
+
+wget https://artifacts.elastic.co/downloads/logstash/logstash-8.11.1-x86_64.rpm -P ${ELK_PATH}/pkgs
+wget https://artifacts.elastic.co/downloads/logstash/logstash-8.11.1-x86_64.rpm.sha512 -P ${ELK_PATH}/pkgs
+shasum -a 512 -c logstash-8.11.1-x86_64.rpm.sha512
+
+wget https://artifacts.elastic.co/downloads/kibana/kibana-8.11.1-x86_64.rpm -P ${ELK_PATH}/pkgs
+wget https://artifacts.elastic.co/downloads/kibana/kibana-8.11.1-x86_64.rpm.sha512 -P ${ELK_PATH}/pkgs
+shasum -a 512 -c kibana-8.11.1-x86_64.rpm.sha512
+
+sudo rpm -ivh ${ELK_PATH}/pkgs/*.rpm
+
+for service in elasticsearch logstash kibana; do
+    systemctl stop ${service}
+done
+
+### Elasticsearch config file
+cp -p /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.org
+sed -i '/^#network.host/a\network.host: 0.0.0.0' /etc/elasticsearch/elasticsearch.yml
+sed -i '/^#discovery.seed_hosts/a\discovery.seed_hosts: ["elk"]' /etc/elasticsearch/elasticsearch.yml
+sed -i '/^#cluster.initial_master_nodes/a\cluster.initial_master_nodes: ["elk"]' /etc/elasticsearch/elasticsearch.yml
+
+### Elastic JVM
+cp -p /etc/sysconfig/elasticsearch /etc/sysconfig/elasticsearch.org
+sed -i '/^#ES_JAVA_OPTS=/a\ES_JAVA_OPTS="-Djava.net.preferIPv4Stack=true"' /etc/sysconfig/elasticsearch
+
+firewall-cmd --permanent --add-port=9200/tcp
+firewall-cmd --reload
+
+systemctl start elasticsearch
+/usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i --url https://elk:9200
+#####
+#### Password reset elastic
+#####
+[root@elk pkgs]# /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i --url https://elk:9200
+This tool will reset the password of the [elastic] user.
+You will be prompted to enter the password.
+Please confirm that you would like to continue [y/N]Y
+
+
+Enter password for [elastic]:
+Re-enter password for [elastic]:
+Password for the [elastic] user successfully reset.
+
+curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic https://localhost:9200
+curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic https://localhost:9200/_nodes?pretty
+curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:ry123@ -X GET "https://elk:9200/_cat/health?v=true&pretty"
+curl --cacert ~/tmp/cert_blog/certs/ca/ca.crt      -u elastic:ry123@ -X GET "https://elk:9200/_cat/nodes?v"
+
+
+
+#####
+### TEST API
+[root@elk pkgs]# curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic https://localhost:9200
+Enter host password for user 'elastic':
+{
+  "name" : "elk",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "yviag9tpTJC6RyleZS5m6g",
+  "version" : {
+    "number" : "8.11.1",
+    "build_flavor" : "default",
+    "build_type" : "rpm",
+    "build_hash" : "6f9ff581fbcde658e6f69d6ce03050f060d1fd0c",
+    "build_date" : "2023-11-11T10:05:59.421038163Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.8.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+
+
+curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:ry123@ -X PUT "https://localhost:9200/test/_doc/1?pretty" -k -H 'Content-Type: application/json' -d '{"counter" : 1, "tags" : ["red"]}'
+[root@elk pkgs]# curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:ry123@ -X PUT "https://localhost:9200/test/_doc/1?pretty" -k -H 'Content-Type: application/json' -d '{"counter" : 1, "tags" : ["red"]}'
+{
+  "_index" : "test",
+  "_id" : "1",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 0,
+  "_primary_term" : 1
+}

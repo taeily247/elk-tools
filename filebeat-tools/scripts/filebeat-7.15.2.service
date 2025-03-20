@@ -1,0 +1,49 @@
+#!/bin/bash
+
+mode=$1
+
+case "${mode}" in
+    'start')
+        echo "Starting Filebeat"
+        /usr/local/filebeat-7.17.25/filebeat run -c /usr/local/filebeat-7.17.25/filebeat.yml &
+        if [ $? -eq 0 ]; then
+            echo "Completed Filebeat"
+            exit 0
+        else
+            echo "Failed Filebeat"
+            exit 1
+        fi
+    ;;
+    'stop')
+        pid_filebeat=$(pidof filebeat)
+        if [ -n ${pid_filebeat} ]; then
+            if (kill -0 ${pid_filebeat} 2>/dev/null); then
+                echo "Shutting down filebeat"
+                kill ${pid_filebeat}
+            fi
+        fi
+    ;;
+    'restart')
+        if $0 stop filebeat; then
+            $0 start filebeat
+        else
+            echo "Failed to stop running filebeat, so refusing to try to start."
+            exit 1
+        fi
+    ;;
+    'status')
+        pid_filebeat=$(pidof filebeat)
+        if [ -n ${pid_filebeat} ]; then
+            echo "Filebeat running (${pid_filebeat})"
+            exit 0
+        else
+            echo "Filebeat is not running, but PID file exists"
+            exit 1
+        fi
+    ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status} [ Filebeat options ]"
+        exit 1
+    ;;
+esac
+exit 0

@@ -1,0 +1,52 @@
+cp -p /etc/kibana/kibana.yml /etc/kibana/kibana.yml.org
+sed -i '/^#server.host/a\server.host: "elk"' /etc/kibana/kibana.yml
+sed -i '/^#elasticsearch.hosts/a\elasticsearch.hosts: ["https:\/\/elk:9200"]' /etc/kibana/kibana.yml
+
+
+### ES Kibana Token
+/usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana
+####
+[root@elk pkgs]# /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana
+eyJ2ZXIiOiI4LjExLjEiLCJhZHIiOlsiMTAuMjExLjU1LjY6OTIwMCJdLCJmZ3IiOiJkYWRjMGI1NmVkYWEwMzU4NDZlMmUxNmRmODYxOTNkZDliMTkyOTM0NmZhYjc3Y2NiODVlZmJjNzMxMTAxNTljIiwia2V5IjoiTlRLRUU0d0JKWjk5TGhFZDhQY0k6d1Q5V3BaZ0VUdzZJbU1XTjJndWEtQSJ9
+
+### Kibana Encrypy Key
+/usr/share/kibana/bin/kibana-encryption-keys generate
+####
+[root@elk pkgs]# /usr/share/kibana/bin/kibana-encryption-keys generate
+## Kibana Encryption Key Generation Utility
+
+The 'generate' command guides you through the process of setting encryption keys for:
+
+xpack.encryptedSavedObjects.encryptionKey
+    Used to encrypt stored objects such as dashboards and visualizations
+    https://www.elastic.co/guide/en/kibana/current/xpack-security-secure-saved-objects.html#xpack-security-secure-saved-objects
+
+xpack.reporting.encryptionKey
+    Used to encrypt saved reports
+    https://www.elastic.co/guide/en/kibana/current/reporting-settings-kb.html#general-reporting-settings
+
+xpack.security.encryptionKey
+    Used to encrypt session information
+    https://www.elastic.co/guide/en/kibana/current/security-settings-kb.html#security-session-and-cookie-settings
+
+
+Already defined settings are ignored and can be regenerated using the --force flag.  Check the documentation links for instructions on how to rotate encryption keys.
+Definitions should be set in the kibana.yml used configure Kibana.
+
+Settings:
+xpack.encryptedSavedObjects.encryptionKey: 88bea96ef41fcf297d1ce008d7f10588
+xpack.reporting.encryptionKey: 64810f4ae86a74c60bd9b54405203c5b
+xpack.security.encryptionKey: 63f6835f66107a623a1c0812935da486
+
+cat <<EOF >>/etc/kibana/kibana.yml
+
+xpack.encryptedSavedObjects.encryptionKey: 88bea96ef41fcf297d1ce008d7f10588
+xpack.reporting.encryptionKey: 64810f4ae86a74c60bd9b54405203c5b
+xpack.security.encryptionKey: 63f6835f66107a623a1c0812935da486
+EOF
+
+firewall-cmd --permanent --add-port=5601/tcp
+firewall-cmd --reload
+
+systemctl restart kibana
+

@@ -1,0 +1,1 @@
+MESSAGE_LOG %{SYSLOGTIMESTAMP:timestamp} %{SYSLOGHOST:hostname} %{PROG:process_name}(?:\[%{POSINT:process_pid:int}\]): %{GREEDYDATA:command_msg}

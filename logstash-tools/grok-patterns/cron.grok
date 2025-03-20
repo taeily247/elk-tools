@@ -1,0 +1,1 @@
+CRON_LOG %{SYSLOGTIMESTAMP:date} %{HOSTNAME:hostname} %{PROG:process_name}(?:\[%{POSINT:process_pid:int}\]): (\(%{USER:user}\) %{GREEDYDATA:commande}|%{GREEDYDATA:commande})

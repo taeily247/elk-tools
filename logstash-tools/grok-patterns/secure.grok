@@ -1,0 +1,9 @@
+### secure_ip
+NUMBER (?:%{BASE10NUM})
+IPV4_PREFIX (?<![0-9])(?:(?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])[.](?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])[.](?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5]))
+COUNT_NUM (?:%{NUMBER:count}|%{IPV4:remote_ip_prefix})
+
+### secure log
+DATA2 %{DATA}
+SSH_FAIL_USER %{SYSLOGBASE} Failed password for invalid user %{DATA2:remote_user} from %{IPORHOST:remote_ip} port %{BASE10NUM:remote_port:int} %{WORD:remote_protocol}
+SSH_FAIL_PASS %{SYSLOGBASE} Failed password for %{DATA2:remote_user} from %{IPORHOST:remote_ip} port %{BASE10NUM:remote_port:int} %{WORD:remote_protocol}

@@ -1,0 +1,74 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+  - /var/log/messages
+  fields:
+    log_type: messages
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/cron
+  fields:
+    log_type: cron
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/shell_cmd.log
+  fields:
+    log_type: cmd
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/secure
+  fields:
+    log_type: secure
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/secure_ip_list.log
+  fields:
+    log_type: secure_ip
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/sftp-server
+  fields:
+    log_type: sftp
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/vsftpd.log
+  fields:
+    log_type: vsftp
+
+- type: log
+  enabled: true
+  paths:
+  - /var/log/fail2ban.log
+  fields:
+    log_type: fail2ban
+
+filebeat.config.modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+    reload.period: 10s
+
+output.logstash:
+    hosts: [ "${elasticsaerch_url}:5044" ]
+
+processors:
+- add_fields:
+    fields:
+      service_type: "app"
+- add_host_metadata:
+    when.not.contains.tags: forwarded
+- add_cloud_metadata: ~
+- add_docker_metadata: ~
+- add_kubernetes_metadata: ~

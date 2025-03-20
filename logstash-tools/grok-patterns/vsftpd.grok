@@ -1,0 +1,6 @@
+DATA2 %{DATA}
+DATESTAMP_RFC822 %{DAY} %{MONTH} .*%{MONTHDAY} %{TIME} %{YEAR}
+VSFTPD_AUTH %{DATESTAMP_RFC822:timestamp} \[pid %{POSINT:pid_number}\] \[%{DATA2:remote_user}\] %{WORD:vsftp_status} LOGIN: Client "%{IP:remote_ip}"
+VSFTPD_UPLOAD %{DATESTAMP_RFC822:timestamp} \[pid %{POSINT:pid_number}\] \[%{DATA2:remote_user}\] %{WORD:vsftp_status} UPLOAD: Client \"%{IP:remote_ip}\"(, \"%{GREEDYDATA:vsftp_file}\", %{DATA:vsftp_file_size}, %{DATA:vsftp_file_transfer_speed}|, \"%{GREEDYDATA:vsftp_file}\", %{DATA:vsftp_file_transfer_speed}|)$
+HTTPERRORDATE %{DAY} %{MONTH}  %{MONTHDAY} %{TIME} %{YEAR}
+VSFTP_ATUH_FAIL %{HTTPERRORDATE:timestamp} \[pid %{NUMBER}\] \[%{GREEDYDATA:user}\] FAIL LOGIN: Client "(::ffff:)?%{IP:source_ip}"

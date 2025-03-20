@@ -1,0 +1,2 @@
+HTTPD_COMMONLOG %{IPORHOST:remote_ip} %{HTTPDUSER:http_ident} %{HTTPDUSER:http_auth} \[%{HTTPDATE:http_timestamp}\] "(?:%{WORD:http_verb} %{NOTSPACE:http_request}(?: HTTP/%{NUMBER:http_version})?|%{DATA:raw_request})" (?:-|%{NUMBER:http_response}) (?:-|%{NUMBER:http_bytes})
+HTTPD_COMBINEDLOG %{HTTPD_COMMONLOG} %{QS:referrer} %{QS:remote_agent}

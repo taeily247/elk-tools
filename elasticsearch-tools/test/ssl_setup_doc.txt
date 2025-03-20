@@ -1,0 +1,75 @@
+[root@elk ELK_STACK]# /usr/share/elk/bin/elk-certgen
+******************************************************************************
+Note: The 'elk-certgen' tool has been deprecated in favour of the
+      'elk-certutil' tool. This command will be removed in a future
+      release.
+******************************************************************************
+
+This tool assists you in the generation of X.509 certificates and certificate
+signing requests for use with SSL in the Elastic stack. Depending on the command
+line option specified, you may be prompted for the following:
+
+* The path to the output file
+    * The output file is a zip file containing the signed certificates and
+      private keys for each instance. If a Certificate Authority was generated,
+      the certificate and private key will also be included in the output file.
+* Information about each instance
+    * An instance is any piece of the Elastic Stack that requires an SSL certificate.
+      Depending on your configuration, elk, Logstash, Kibana, and Beats
+      may all require a certificate and private key.
+    * The minimum required value for each instance is a name. This can simply be the
+      hostname, which will be used as the Common Name of the certificate. A full
+      distinguished name may also be used.
+    * A filename value may be required for each instance. This is necessary when the
+      name would result in an invalid file or directory name. The name provided here
+      is used as the directory name (within the zip) and the prefix for the key and
+      certificate files. The filename is required if you are prompted and the name
+      is not displayed in the prompt.
+    * IP addresses and DNS names are optional. Multiple values can be specified as a
+      comma separated string. If no IP addresses or DNS names are provided, you may
+      disable hostname verification in your SSL configuration.
+* Certificate Authority private key password
+    * The password may be left empty if desired.
+
+Let's get started...
+
+Please enter the desired output file [certificate-bundle.zip]:
+Enter instance name: elk
+Enter name for directories and files [elk]:
+Enter IP Addresses for instance (comma-separated if more than one) []: 192.168.1.1
+Enter DNS names for instance (comma-separated if more than one) []: elk
+Would you like to specify another instance? Press 'y' to continue entering instance information:
+Certificates written to /usr/share/elk/certificate-bundle.zip
+
+This file should be properly secured as it contains the private keys for all
+instances and the certificate authority.
+
+After unzipping the file, there will be a directory for each instance containing
+the certificate and private key. Copy the certificate, key, and CA certificate
+to the configuration directory of the Elastic product that they will be used for
+and follow the SSL configuration instructions in the product guide.
+
+For client applications, you may only need to copy the CA certificate and
+configure the client to trust this certificate.
+
+
+
+unzip /usr/share/elk/certificate-bundle.zip -d /etc/elk/certs/.
+
+[root@elk elk]# /usr/share/elk/bin/elk-reset-password interactive -u elastic -i --url  "https://192.168.1.1:9200"
+This tool will reset the password of the [elastic] user.
+You will be prompted to enter the password.
+Please confirm that you would like to continue [y/N]Y
+
+
+Enter password for [elastic]:
+Re-enter password for [elastic]:
+Password for the [elastic] user successfully reset.
+
+
+curl --cacert /etc/elk/certs/ca/ca.crt -u elastic:ry123@ 'https://elk:9200/_cat/nodes?v'
+
+[root@elk elk]# curl --cacert /etc/elk/certs/ca/ca.crt -u elastic:ry123@ 'https://elk:9200/_cat/nodes?v'
+ip          heap.percent ram.percent cpu load_1m load_5m load_15m node.role   master name
+192.168.1.1           21          94  11    0.36    0.52     0.34 cdfhilmrstw *      elk
+[root@elk elk]#
